@@ -1,0 +1,19 @@
+{
+  "kind": "Dart AOT IO and GFM parser; not end-to-end UI timing",
+  "dart": "3.12.2 (stable) (Tue Jun 9 01:11:39 2026 -0700) on \"windows_x64\"",
+  "os": "\"Windows 11 Home\" 10.0 (Build 26300)",
+  "results": [
+    {
+      "bytes": 102416,
+      "parseMedianMs": 111.523,
+      "readEncodeWriteMedianMs": 21.736,
+      "roundTrip": true
+    },
+    {
+      "bytes": 1048726,
+      "parseMedianMs": 832.696,
+      "readEncodeWriteMedianMs": 102.597,
+      "roundTrip": true
+    }
+  ]
+}
