@@ -4,11 +4,17 @@
 
 ## 1. 배포본 실행
 
+**일반 사용자에게는 [설치 파일 하나](https://github.com/Kay-lucas/local-markdown-editor/releases/download/v1.0.0/LocalMarkdownEditor-Setup-1.0.0-x64.exe)를 권장합니다.** 내려받아 실행하고 **다음 → 설치 → 마침**을 누른 뒤 시작 메뉴의 **로컬 Markdown 에디터**를 실행하세요. 압축 해제나 Flutter 설치는 필요하지 않습니다.
+
+설치 파일은 Windows x64용이며, 현재 사용자 계정의 `%LOCALAPPDATA%/Programs/LocalMarkdownEditor`에 설치합니다. 필요한 Microsoft Visual C++ x64 런타임을 앱 폴더에 함께 넣으므로 추가 다운로드·관리자 권한을 요구하지 않습니다. 시작 메뉴 바로가기와 Windows의 앱 제거 항목을 제공합니다. 재설치·제거 때 Markdown·예제 문서는 보존합니다.
+
+현재 배포자 코드 서명은 없습니다. Windows와 브라우저의 평판 확인에 따라 다운로드·실행 경고가 표시될 수 있습니다. 관련 동작은 [Microsoft 공식 안내](https://learn.microsoft.com/en-us/windows/security/operating-system-security/virus-and-threat-protection/microsoft-defender-smartscreen/)를 참고하세요. 실제 검증 내역과 남은 확인 사항은 [verification.md](verification.md)에 기록합니다.
+
+### 압축 파일 방식
+
 배포 폴더의 `local_markdown_editor.exe`를 더블클릭합니다. 압축 파일을 받았다면 먼저 전체를 풀어 주세요. exe와 같은 폴더의 DLL, `data` 폴더는 함께 있어야 합니다. exe만 따로 이동하면 실행되지 않을 수 있습니다.
 
-설치 프로그램·코드 서명·자동 업데이트는 포함하지 않습니다. 실제 검증 내역과 남은 확인 사항은 [verification.md](verification.md)에 기록합니다.
-
-현재 PC에서 실행을 확인했습니다. 다른 PC에는 앱이 사용하는 Microsoft Visual C++ x64 런타임이 필요할 수 있습니다. 이 압축에는 Microsoft 런타임 설치 프로그램을 포함하지 않습니다. 관련 배포 방식은 [Microsoft 공식 안내](https://learn.microsoft.com/en-us/cpp/windows/redistributing-visual-cpp-files)를 참고하세요.
+기존 ZIP에는 Microsoft 런타임을 넣지 않아 다른 PC에서는 런타임이 별도로 필요할 수 있습니다. 처음 사용하는 사람에게는 위의 설치 파일을 전달하세요. 자동 업데이트는 포함하지 않습니다.
 
 ## 2. 사용 방법
 
@@ -123,6 +129,22 @@ flutter pub get
 
 빌드 결과 기본 위치는 `build/windows/x64/runner/Release`입니다. 전체 폴더를 함께 배포합니다.
 
+### 설치 파일 제작
+
+NSIS 3.13 공식 Windows ZIP을 내려받아 압축을 풉니다. 별도의 NSIS 설치는 필요하지 않습니다. 공식 배포 파일의 SHA-256은 `THIRD_PARTY_NOTICES.md`에 기록했습니다. VS Build Tools의 x64 **release** CRT 경로를 지정합니다.
+
+```powershell
+.\tool\build_installer.ps1 `
+  -NsisCompiler C:\tools\nsis-3.13\makensis.exe `
+  -PayloadDirectory C:\release\LocalMarkdownEditor-Windows-x64 `
+  -OutputDirectory C:\release `
+  -MsvcRuntimeDirectory 'C:\Program Files (x86)\Microsoft Visual Studio\18\BuildTools\VC\Redist\MSVC\14.51.36231\x64\Microsoft.VC145.CRT'
+```
+
+`installer/windows.nsi`가 사용자별 설치와 제거를 정의하고, 제작 스크립트가 정확한 앱 파일 목록을 생성합니다. 제거할 때 설치 폴더 전체를 재귀 삭제하지 않습니다. Markdown·예제 문서는 제거 목록에서 제외하며, 기존 문서가 있는 관련 없는 폴더에는 설치하지 않습니다. 새 버전 설치 파일을 만들 때는 앱과 함께 제공하는 런타임도 갱신해야 합니다.
+
+`tool/test_installer.ps1`은 기존 앱 설치가 없는 경우에만 새 검증 폴더에서 설치·재설치·제거·사용자 문서 보존을 검사합니다. 사용자 계정의 앱 설치 기록과 시작 메뉴를 잠시 만들었다가 검증 후 제거하므로, 실제 설치가 이미 있다면 실행하지 않습니다.
+
 ## 7. 구조와 검증
 
 | 경로 | 역할 |
@@ -170,4 +192,4 @@ GitHub 저장소: [Kay-lucas/local-markdown-editor](https://github.com/Kay-lucas
 
 소스·테스트·문서·잠금 파일은 Git으로 관리하고 빌드·캐시·임시 파일은 제외합니다. Windows 실행 파일 ZIP과 소스 ZIP은 [Releases](https://github.com/Kay-lucas/local-markdown-editor/releases)에서 제공합니다. 저장소는 비공개로 시작하며, 접근 가능한 GitHub 계정으로 로그인해야 볼 수 있습니다.
 
-다중 탭, 자동 저장, 최근 파일, 문법 색상 강조, 스크롤 동기화, 찾기·바꾸기, PDF·HTML 내보내기는 이번 버전 범위에 포함하지 않습니다.
+다중 탭, 자동 저장, 최근 파일, 문법 색상 강조, 스크롤 동기화, 찾기·바꾸기, PDF·HTML 내보내기는 이번 버전 범위에 포함하지 않습니다. 설치 파일은 이후 배포 편의 요청으로 추가한 산출물입니다. 원래 요구사항의 설치 프로그램 제외 항목보다 이 후속 요청을 우선합니다.

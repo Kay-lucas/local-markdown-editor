@@ -1,0 +1,21 @@
+{
+  "installer": "LocalMarkdownEditor-Setup-1.0.0-x64.exe",
+  "sha256": "ced75034057b840475a7a46d84c257684724ee7acadc85d3c8813a7225f04dbe",
+  "installation": "passed",
+  "payloadFilesVerified": 29,
+  "runtimeIncluded": [
+    "msvcp140.dll",
+    "vcruntime140.dll",
+    "vcruntime140_1.dll"
+  ],
+  "startMenuShortcuts": 3,
+  "uninstall": "passed",
+  "userDocumentPreserved": true,
+  "upgradePreservesUserDocuments": true,
+  "editedExamplePreserved": true,
+  "uninstallRegistryRemoved": true,
+  "uiWizardManuallyVerified": false,
+  "cleanPcWithoutDevelopmentToolsVerified": false,
+  "digitalSignature": "not signed",
+  "rejectsUnrelatedNonemptyDirectory": true
+}

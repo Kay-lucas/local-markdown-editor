@@ -115,3 +115,36 @@ Microsoft Visual C++ x64 런타임은 현재 검증 PC에 설치되어 있다. �
 ## 7. GitHub 전달
 
 사용자의 명시적 업로드 요청에 따라 비공개 저장소 [Kay-lucas/local-markdown-editor](https://github.com/Kay-lucas/local-markdown-editor)에 소스를 관리하고, 버전 `v1.0.0`의 Windows 실행 파일 ZIP과 소스 ZIP은 [Releases](https://github.com/Kay-lucas/local-markdown-editor/releases/tag/v1.0.0)에 제공한다. 업로드를 위해 앱 코드나 기존 검증 결과를 바꾸지는 않는다.
+
+## 8. 단일 설치 파일 추가 검증
+
+LinkedIn 공유를 쉽게 하려는 후속 요청으로 `LocalMarkdownEditor-Setup-1.0.0-x64.exe`를 추가했다. 에디터 실행 파일은 기존 v1.0.0 Release와 같으며, 앱 소스 기능을 바꾸지 않고 설치·실행 구성 요소·제거·사용 안내를 추가했다.
+
+- 제작 도구: NSIS 3.13 공식 ZIP, SHA-256을 공식 배포 페이지와 대조해 확인.
+- 설치 범위: 현재 사용자 계정. 관리자 권한·시스템 DLL 교체·추가 인터넷 다운로드 없음.
+- 포함: 앱 전체, unmodified Microsoft Visual C++ x64 release CRT DLL 10개, 예제·사용 안내·서드파티 고지.
+- 기본 위치: `%LOCALAPPDATA%/Programs/LocalMarkdownEditor`.
+- 시작 메뉴 바로가기 3개와 Windows 앱 제거 등록 제공.
+- 배포자 코드 서명: 없음. 다운로드·실행 때 Windows나 브라우저 경고가 나올 수 있음.
+
+### 자동 설치 검증 결과
+
+실제 Windows에서 검증용 새 폴더에 설치 파일을 실행했다. 기존 등록된 앱이나 같은 시작 메뉴 폴더가 있으면 검증을 진행하지 않도록 했다.
+
+| 항목 | 결과 |
+| --- | --- |
+| 단일 exe 설치 | 통과 |
+| 설치된 payload 29개 파일과 원본 해시 비교 | 통과 |
+| Visual C++ 런타임 파일 포함 | 확인 |
+| 시작 메뉴 바로가기 3개 | 통과 |
+| 동일 버전 재설치 | 통과 |
+| 재설치 시 직접 추가한 문서·편집한 예제 보존 | 통과 |
+| 앱 파일 제거 및 앱 제거 등록·바로가기 정리 | 통과 |
+| 제거 후 Markdown·편집한 예제 보존 | 통과 |
+| 관련 없는 비어 있지 않은 폴더 설치 거절 | 통과, 기존 문서 변경 없음 |
+| 설치 마법사 버튼의 직접 수동 조작 | 미검증 |
+| 개발 도구가 없는 별도 PC에서 실행 | 미검증 |
+
+기계 판독용 결과와 최종 설치 파일의 SHA-256은 [installer_results.json](verification/installer_results.json)에 있다. 서드파티 고지는 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)에 기록했다. 원래의 73개 앱 자동 테스트와 실기 미검증 목록은 그대로 유지한다.
+
+설치 파일 제작 소스와 검증 자료는 `main` 브랜치 및 `LocalMarkdownEditor-installer-source.zip`에 포함한다. 최초 `v1.0.0` 태그와 기존 소스 ZIP은 원래 배포본을 보존하며, 기존 파일을 덮어쓰지 않는다. 저장소 공개 전환과 앱 자체의 공개 라이선스 선택은 사용자 확인 후 진행한다.
