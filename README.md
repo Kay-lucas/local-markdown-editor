@@ -190,6 +190,14 @@ dart compile exe tool/benchmark.dart -o benchmark.exe
 
 GitHub 저장소: [Kay-lucas/local-markdown-editor](https://github.com/Kay-lucas/local-markdown-editor)
 
-소스·테스트·문서·잠금 파일은 Git으로 관리하고 빌드·캐시·임시 파일은 제외합니다. Windows 실행 파일 ZIP과 소스 ZIP은 [Releases](https://github.com/Kay-lucas/local-markdown-editor/releases)에서 제공합니다. 저장소는 비공개로 시작하며, 접근 가능한 GitHub 계정으로 로그인해야 볼 수 있습니다.
+소스·테스트·문서·잠금 파일은 Git으로 관리하고 빌드·캐시·임시 파일은 제외합니다. 설치 파일과 Windows 실행 파일 ZIP·소스 ZIP은 [Releases](https://github.com/Kay-lucas/local-markdown-editor/releases)에서 제공합니다. 이 저장소는 공개 저장소이며, 앱 다운로드에 GitHub 로그인이 필요하지 않습니다.
+
+### MIT 라이선스
+
+이 프로젝트의 자체 작성 앱 코드와 설치 스크립트는 [MIT 라이선스](LICENSE)로 공개합니다. 개인·업무·상업적 사용, 수정과 재배포를 허용합니다. 복사하거나 재배포할 때 저작권 표시와 라이선스 고지를 유지해야 합니다.
+
+Flutter·패키지·Microsoft 런타임 등 외부 구성 요소에는 각각의 라이선스가 적용됩니다. [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)와 앱에 포함된 고지문도 함께 유지하세요.
+
+LinkedIn 등에는 [설치 파일이 있는 릴리스 페이지](https://github.com/Kay-lucas/local-markdown-editor/releases/tag/v1.0.0)를 공유하면 됩니다.
 
 다중 탭, 자동 저장, 최근 파일, 문법 색상 강조, 스크롤 동기화, 찾기·바꾸기, PDF·HTML 내보내기는 이번 버전 범위에 포함하지 않습니다. 설치 파일은 이후 배포 편의 요청으로 추가한 산출물입니다. 원래 요구사항의 설치 프로그램 제외 항목보다 이 후속 요청을 우선합니다.

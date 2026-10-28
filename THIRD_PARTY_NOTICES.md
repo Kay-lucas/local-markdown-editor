@@ -1,6 +1,6 @@
 # Third-party components
 
-The license for the original application code does not replace the licenses for the components below.
+The original application code and installer scripts are licensed under the MIT License in the accompanying `LICENSE` file. That license does not replace the licenses for the third-party components below.
 
 ## Flutter, Dart and packages
 

@@ -114,7 +114,7 @@ Microsoft Visual C++ x64 런타임은 현재 검증 PC에 설치되어 있다. �
 
 ## 7. GitHub 전달
 
-사용자의 명시적 업로드 요청에 따라 비공개 저장소 [Kay-lucas/local-markdown-editor](https://github.com/Kay-lucas/local-markdown-editor)에 소스를 관리하고, 버전 `v1.0.0`의 Windows 실행 파일 ZIP과 소스 ZIP은 [Releases](https://github.com/Kay-lucas/local-markdown-editor/releases/tag/v1.0.0)에 제공한다. 업로드를 위해 앱 코드나 기존 검증 결과를 바꾸지는 않는다.
+처음에는 사용자 요청에 따라 비공개 저장소를 만들었다. 이후 2026-10-28 사용자가 MIT 공개와 설치 파일 업로드를 명시적으로 승인해 [Kay-lucas/local-markdown-editor](https://github.com/Kay-lucas/local-markdown-editor)를 공개 저장소로 제공한다. 설치 파일과 소스는 [Releases](https://github.com/Kay-lucas/local-markdown-editor/releases/tag/v1.0.0)에서 받는다. 공개 전환으로 앱 기능이나 기존 검증 결과를 바꾸지는 않는다.
 
 ## 8. 단일 설치 파일 추가 검증
 
@@ -134,7 +134,7 @@ LinkedIn 공유를 쉽게 하려는 후속 요청으로 `LocalMarkdownEditor-Set
 | 항목 | 결과 |
 | --- | --- |
 | 단일 exe 설치 | 통과 |
-| 설치된 payload 29개 파일과 원본 해시 비교 | 통과 |
+| 설치된 payload 30개 파일과 원본 해시 비교, MIT LICENSE 포함 | 통과 |
 | Visual C++ 런타임 파일 포함 | 확인 |
 | 시작 메뉴 바로가기 3개 | 통과 |
 | 동일 버전 재설치 | 통과 |
@@ -147,4 +147,4 @@ LinkedIn 공유를 쉽게 하려는 후속 요청으로 `LocalMarkdownEditor-Set
 
 기계 판독용 결과와 최종 설치 파일의 SHA-256은 [installer_results.json](verification/installer_results.json)에 있다. 서드파티 고지는 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)에 기록했다. 원래의 73개 앱 자동 테스트와 실기 미검증 목록은 그대로 유지한다.
 
-설치 파일 제작 소스와 검증 자료는 `main` 브랜치 및 `LocalMarkdownEditor-installer-source.zip`에 포함한다. 최초 `v1.0.0` 태그와 기존 소스 ZIP은 원래 배포본을 보존하며, 기존 파일을 덮어쓰지 않는다. 저장소 공개 전환과 앱 자체의 공개 라이선스 선택은 사용자 확인 후 진행한다.
+설치 파일 제작 소스·MIT LICENSE·검증 자료는 `main` 브랜치 및 `LocalMarkdownEditor-installer-source.zip`에 포함한다. 최초 `v1.0.0` 태그와 기존 소스 ZIP은 원래 배포본을 보존하며, 기존 파일을 덮어쓰지 않는다. 설치 파일에도 MIT LICENSE와 서드파티 고지문을 동봉한다. 앱에 별도로 작성한 코드에는 공개 저장소 루트의 MIT 라이선스가 적용된다.
