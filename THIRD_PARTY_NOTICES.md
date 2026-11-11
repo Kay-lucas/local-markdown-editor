@@ -8,6 +8,8 @@ Flutter, Dart, flutter_markdown_plus, markdown, file_selector, path_provider_win
 
 The complete notices collected by Flutter are in `data/flutter_assets/NOTICES.Z`. They can also be read inside the application through **도움말 → 오픈소스 라이선스**. Preserve that file and the notices when distributing the app.
 
+Version 1.1 adds Flutter Quill 11.6.0 (MIT, Copyright (c) 2024 Flutter Quill project and open source contributors), dart_quill_delta 10.8.3, quill_native_bridge and their transitive dependencies. Their full copyright/license texts are included in the generated Flutter notices above. Flutter Quill's source and license are available at https://github.com/singerdmx/flutter-quill. External HTML-rich paste is disabled; the editor uses local Markdown and plain-text clipboard input.
+
 ## Microsoft Visual C++ runtime
 
 The installer bundles unmodified x64 release runtime DLLs from the `VC/Redist/MSVC/14.51.36231/x64/Microsoft.VC145.CRT` directory of Visual Studio Build Tools 2026. These Microsoft components are governed by Microsoft's terms, not by this project's application license.

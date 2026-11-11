@@ -2,9 +2,11 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_quill/flutter_quill.dart' as q;
 
 import '../commands/formatting_commands.dart';
 import '../controllers/editor_controller.dart';
+import '../controllers/visual_editor_controller.dart';
 import '../services/content_policy.dart';
 import '../services/editor_interaction.dart';
 import '../services/file_dialog_service.dart';
@@ -12,6 +14,7 @@ import '../services/link_service.dart';
 import '../services/settings_service.dart';
 import '../services/window_service.dart';
 import 'markdown_preview.dart';
+import 'visual_editor.dart';
 
 class EditorScreen extends StatefulWidget {
   const EditorScreen({
@@ -22,6 +25,7 @@ class EditorScreen extends StatefulWidget {
     required this.policy,
     required this.links,
     this.interaction,
+    this.initialPath,
   });
   final EditorController editor;
   final SettingsController settings;
@@ -29,6 +33,7 @@ class EditorScreen extends StatefulWidget {
   final ContentPolicy policy;
   final LinkService links;
   final EditorInteraction? interaction;
+  final String? initialPath;
   @override
   State<EditorScreen> createState() => _EditorScreenState();
 }
@@ -36,6 +41,11 @@ class EditorScreen extends StatefulWidget {
 class _EditorScreenState extends State<EditorScreen> {
   final _focus = FocusNode(debugLabel: 'Markdown editor');
   final _scroll = ScrollController();
+  final _visualFocus = FocusNode(debugLabel: 'Visual document editor');
+  final _visualKey = GlobalKey<q.EditorState>();
+  late final VisualEditorController _visual;
+  bool _visualActive = false;
+  bool _previewOnly = false;
   GlobalKey<EditableTextState> _editorKey = GlobalKey<EditableTextState>();
   late final EditorInteraction _ui;
   bool _modal = false;
@@ -48,11 +58,38 @@ class _EditorScreenState extends State<EditorScreen> {
   @override
   void initState() {
     super.initState();
+    _visual = VisualEditorController(editor);
+    _focus.addListener(_sourceFocused);
+    _visualFocus.addListener(_visualFocused);
     _ui = widget.interaction ?? EditorDialogs(() => context);
     widget.window.setCloseHandler(_exit);
     editor.addListener(_changed);
     widget.settings.addListener(_settingsChanged);
     _changed();
+    if (widget.initialPath != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          unawaited(
+            editor.openDocument(_ui, requestedPath: widget.initialPath),
+          );
+        }
+      });
+    }
+  }
+
+  void _sourceFocused() {
+    if (_focus.hasFocus && mounted) {
+      _visual.active = false;
+      setState(() => _visualActive = false);
+    }
+  }
+
+  void _visualFocused() {
+    if (_visualFocus.hasFocus && mounted) {
+      _visual.synchronize();
+      _visual.active = true;
+      setState(() => _visualActive = true);
+    }
   }
 
   void _changed() {
@@ -104,16 +141,22 @@ class _EditorScreenState extends State<EditorScreen> {
       _ui.notify('한글 조합을 마친 뒤 서식을 적용해 주세요.');
       return;
     }
-    editor.applyEdit(FormattingCommands.apply(editor.text.value, command));
-    _focus.requestFocus();
+    if (_visualActive && !_previewOnly) {
+      _visual.format(command);
+      _visualFocus.requestFocus();
+    } else {
+      editor.applyEdit(FormattingCommands.apply(editor.text.value, command));
+      _focus.requestFocus();
+    }
   }
 
   Future<void> _insertLink({bool image = false}) async {
     if (_blocked || editor.transitionLocked || editor.composing) return;
+    final visual = _visualActive && !_previewOnly;
     final selection = FormattingCommands.selection(editor.text.value);
     final snapshot = editor.text.value;
     final label = TextEditingController(
-      text: selection.textInside(snapshot.text),
+      text: visual ? _visual.selectedText : selection.textInside(snapshot.text),
     );
     final address = TextEditingController();
     final form = GlobalKey<FormState>();
@@ -184,20 +227,24 @@ class _EditorScreenState extends State<EditorScreen> {
     );
     _modal = false;
     if (result == true && mounted) {
-      editor.applyEdit(
-        FormattingCommands.link(
-          snapshot,
-          label.text.isEmpty ? (image ? '이미지' : '링크') : label.text,
-          address.text,
-          image: image,
-        ),
-      );
+      if (visual) {
+        _visual.link(label.text, address.text, image: image);
+      } else {
+        editor.applyEdit(
+          FormattingCommands.link(
+            snapshot,
+            label.text.isEmpty ? (image ? '이미지' : '링크') : label.text,
+            address.text,
+            image: image,
+          ),
+        );
+      }
     }
     // Wait until route animations have detached their text fields.
     await Future<void>.delayed(const Duration(milliseconds: 250));
     label.dispose();
     address.dispose();
-    if (mounted) _focus.requestFocus();
+    if (mounted) (visual ? _visualFocus : _focus).requestFocus();
   }
 
   Future<void> _link(String href) async {
@@ -217,6 +264,27 @@ class _EditorScreenState extends State<EditorScreen> {
 
   void _editMenu(String command) {
     if (_blocked || editor.transitionLocked) return;
+    if (_visualActive && !_previewOnly) {
+      final state = _visualKey.currentState;
+      _visualFocus.requestFocus();
+      if (state is q.QuillRawEditorState) {
+        switch (command) {
+          case 'undo':
+            editor.undo();
+          case 'redo':
+            editor.redo();
+          case 'cut':
+            state.cutSelection(SelectionChangedCause.toolbar);
+          case 'copy':
+            state.copySelection(SelectionChangedCause.toolbar);
+          case 'paste':
+            unawaited(state.pasteText(SelectionChangedCause.toolbar));
+          case 'select':
+            state.selectAll(SelectionChangedCause.toolbar);
+        }
+      }
+      return;
+    }
     final state = _editorKey.currentState;
     _focus.requestFocus();
     switch (command) {
@@ -257,7 +325,12 @@ class _EditorScreenState extends State<EditorScreen> {
         unawaited(editor.save(_ui, saveAs: shift));
         return KeyEventResult.handled;
       }
-      if (_focus.hasFocus && !editor.transitionLocked) {
+      if ((_focus.hasFocus || _visualFocus.hasFocus) &&
+          !editor.transitionLocked) {
+        if (_visualFocus.hasFocus && key == LogicalKeyboardKey.keyU) {
+          _ui.notify('Markdown에 없는 밑줄 서식은 지원하지 않습니다.');
+          return KeyEventResult.handled;
+        }
         if (key == LogicalKeyboardKey.keyZ) {
           shift ? editor.redo() : editor.undo();
           return KeyEventResult.handled;
@@ -383,6 +456,12 @@ class _EditorScreenState extends State<EditorScreen> {
         ),
         SubmenuButton(
           menuChildren: [
+            _menu(
+              '문서 편집 / 미리보기 전환',
+              '',
+              () => setState(() => _previewOnly = !_previewOnly),
+            ),
+            const Divider(),
             for (final mode in ThemeMode.values)
               _menu(
                 '${widget.settings.value.theme == mode ? '✓ ' : ''}${_themeName(mode)}',
@@ -415,14 +494,14 @@ class _EditorScreenState extends State<EditorScreen> {
               '',
               () => _help(
                 '로컬 Markdown 에디터',
-                '버전 1.0.0\n\n내 컴퓨터에서 작성하고 저장하는 Markdown 편집기입니다.\n로그인·서버·DB 없이 동작합니다.\n\nFlutter 기반 Windows 데스크톱 앱\n\n사용한 오픈소스 라이선스는 아래에서 확인할 수 있습니다.',
+                '버전 1.1.0\n\n왼쪽 Markdown과 오른쪽 문서를 양방향으로 편집합니다.\n표·코드·이미지 등 원문 보존 블록은 왼쪽에서 수정합니다.\n로그인·서버·DB 없이 동작합니다.\n\nFlutter 기반 Windows 데스크톱 앱\n\n사용한 오픈소스 라이선스는 아래에서 확인할 수 있습니다.',
               ),
             ),
             _menu('오픈소스 라이선스', '', () {
               showLicensePage(
                 context: context,
                 applicationName: '로컬 Markdown 에디터',
-                applicationVersion: '1.0.0',
+                applicationVersion: '1.1.0',
               );
             }),
           ],
@@ -545,6 +624,14 @@ class _EditorScreenState extends State<EditorScreen> {
           _tool('인용', Icons.format_quote, format(FormatCommand.quote)),
           _tool('구분선', Icons.horizontal_rule, format(FormatCommand.rule)),
           _tool('표', Icons.table_chart_outlined, format(FormatCommand.table)),
+          const SizedBox(width: 10),
+          Text(
+            _visualActive && !_previewOnly ? '문서에 서식 적용' : '원문에 서식 적용',
+            style: TextStyle(
+              fontSize: 11,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
         ],
       ),
     );
@@ -700,13 +787,61 @@ class _EditorScreenState extends State<EditorScreen> {
               color: Theme.of(context).colorScheme.surface,
               child: Column(
                 children: [
-                  _paneTitle('미리보기', '실시간 · GFM'),
-                  Expanded(
-                    child: MarkdownPreview(
-                      editor: editor,
-                      policy: widget.policy,
-                      onLink: _link,
+                  Container(
+                    height: 43,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    decoration: BoxDecoration(
+                      border: Border(
+                        bottom: BorderSide(
+                          color: Theme.of(context).colorScheme.outlineVariant,
+                        ),
+                      ),
                     ),
+                    child: Row(
+                      children: [
+                        Text(
+                          _previewOnly ? '미리보기' : '문서 편집',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const Spacer(),
+                        TextButton.icon(
+                          key: const ValueKey('toggle-visual-preview'),
+                          onPressed: () =>
+                              setState(() => _previewOnly = !_previewOnly),
+                          icon: Icon(
+                            _previewOnly
+                                ? Icons.edit_outlined
+                                : Icons.visibility_outlined,
+                            size: 15,
+                          ),
+                          label: Text(
+                            _previewOnly ? '편집하기' : '미리보기',
+                            style: const TextStyle(fontSize: 11),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: _previewOnly
+                        ? MarkdownPreview(
+                            editor: editor,
+                            policy: widget.policy,
+                            onLink: _link,
+                          )
+                        : VisualEditor(
+                            bridge: _visual,
+                            focusNode: _visualFocus,
+                            editorKey: _visualKey,
+                            policy: widget.policy,
+                            onLink: _link,
+                            onKeyEvent: (event) =>
+                                _keyboard(_visualFocus, event),
+                            onSource: () => _focus.requestFocus(),
+                          ),
                   ),
                 ],
               ),
@@ -731,6 +866,7 @@ class _EditorScreenState extends State<EditorScreen> {
       child: DefaultTextStyle(
         style: TextStyle(
           fontSize: 11,
+          fontFamily: 'Malgun Gothic',
           color: Theme.of(context).colorScheme.onSurfaceVariant,
         ),
         child: Row(
@@ -750,7 +886,9 @@ class _EditorScreenState extends State<EditorScreen> {
             const SizedBox(width: 16),
             Text(editor.format.newlineLabel),
             const SizedBox(width: 16),
-            Text('줄 $line, 열 $column'),
+            Text(
+              _visualActive && !_previewOnly ? '문서 편집 중' : '줄 $line, 열 $column',
+            ),
             const SizedBox(width: 16),
             SizedBox(
               width: 92,
@@ -849,6 +987,8 @@ class _EditorScreenState extends State<EditorScreen> {
   void dispose() {
     editor.removeListener(_changed);
     widget.settings.removeListener(_settingsChanged);
+    _visual.dispose();
+    _visualFocus.dispose();
     _focus.dispose();
     _scroll.dispose();
     super.dispose();

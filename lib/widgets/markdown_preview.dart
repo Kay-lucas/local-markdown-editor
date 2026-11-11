@@ -85,32 +85,69 @@ class _MarkdownPreviewState extends State<MarkdownPreview> {
     });
   }
 
-  Widget _placeholder(String text, String? alt) => Container(
-    padding: const EdgeInsets.all(12),
-    margin: const EdgeInsets.symmetric(vertical: 8),
-    decoration: BoxDecoration(
-      color: Theme.of(context).colorScheme.surfaceContainer,
-      borderRadius: BorderRadius.circular(8),
-    ),
-    child: Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const Icon(Icons.image_outlined, size: 20),
-        const SizedBox(width: 8),
-        Flexible(
-          child: Text(
-            '${alt?.isNotEmpty == true ? '$alt · ' : ''}$text',
-            style: const TextStyle(fontSize: 13),
-          ),
-        ),
-      ],
-    ),
-  );
-
   @override
   Widget build(BuildContext context) {
     if (_error != null) return Center(child: Text(_error!));
-    if (_data.isEmpty) {
+    return MarkdownContent(
+      data: _data,
+      path: _path,
+      policy: widget.policy,
+      onLink: widget.onLink,
+      scrollController: _scroll,
+    );
+  }
+
+  @override
+  void dispose() {
+    widget.editor.removeListener(_changed);
+    _timer?.cancel();
+    _scroll.dispose();
+    super.dispose();
+  }
+}
+
+class MarkdownContent extends StatelessWidget {
+  const MarkdownContent({
+    super.key,
+    required this.data,
+    required this.path,
+    required this.policy,
+    required this.onLink,
+    this.scrollController,
+    this.padding = const EdgeInsets.fromLTRB(32, 24, 32, 48),
+  });
+  final String data;
+  final String? path;
+  final ContentPolicy policy;
+  final void Function(String) onLink;
+  final ScrollController? scrollController;
+  final EdgeInsets padding;
+  Widget _placeholder(BuildContext context, String text, String? alt) =>
+      Container(
+        padding: const EdgeInsets.all(12),
+        margin: const EdgeInsets.symmetric(vertical: 8),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surfaceContainer,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.image_outlined, size: 20),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                '${alt?.isNotEmpty == true ? '$alt · ' : ''}$text',
+                style: const TextStyle(fontSize: 13),
+              ),
+            ),
+          ],
+        ),
+      );
+
+  @override
+  Widget build(BuildContext context) {
+    if (data.isEmpty) {
       return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -134,9 +171,13 @@ class _MarkdownPreviewState extends State<MarkdownPreview> {
     final colors = Theme.of(context).colorScheme;
     return Markdown(
       key: const ValueKey('rendered-markdown'),
-      controller: _scroll,
-      padding: const EdgeInsets.fromLTRB(32, 24, 32, 48),
-      data: _data,
+      controller: scrollController,
+      shrinkWrap: scrollController == null,
+      physics: scrollController == null
+          ? const NeverScrollableScrollPhysics()
+          : null,
+      padding: padding,
+      data: data,
       selectable: true,
       extensionSet: editorMarkdownExtensions,
       softLineBreak: false,
@@ -184,11 +225,13 @@ class _MarkdownPreviewState extends State<MarkdownPreview> {
         color: colors.primary,
       ),
       onTapLink: (_, href, _) {
-        if (href != null) widget.onLink(href);
+        if (href != null) onLink(href);
       },
       imageBuilder: (uri, title, alt) {
-        final location = widget.policy.image(uri.toString(), _path);
-        if (location.path == null) return _placeholder(location.message!, alt);
+        final location = policy.image(uri.toString(), path);
+        if (location.path == null) {
+          return _placeholder(context, location.message!, alt);
+        }
         return Semantics(
           label: alt ?? '로컬 이미지',
           child: ConstrainedBox(
@@ -196,19 +239,12 @@ class _MarkdownPreviewState extends State<MarkdownPreview> {
             child: Image.file(
               File(location.path!),
               fit: BoxFit.contain,
-              errorBuilder: (_, _, _) => _placeholder('이미지를 불러올 수 없습니다.', alt),
+              errorBuilder: (_, _, _) =>
+                  _placeholder(context, '이미지를 불러올 수 없습니다.', alt),
             ),
           ),
         );
       },
     );
-  }
-
-  @override
-  void dispose() {
-    widget.editor.removeListener(_changed);
-    _timer?.cancel();
-    _scroll.dispose();
-    super.dispose();
   }
 }

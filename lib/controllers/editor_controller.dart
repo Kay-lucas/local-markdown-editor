@@ -27,10 +27,12 @@ class EditorController extends ChangeNotifier {
   int documentId = 0;
   bool busy = false;
   bool transitionLocked = false;
+  bool _visualComposing = false;
   String status = '새 문서';
   bool get dirty => text.text != savedText;
   bool get composing =>
-      text.value.composing.isValid && !text.value.composing.isCollapsed;
+      _visualComposing ||
+      (text.value.composing.isValid && !text.value.composing.isCollapsed);
   bool get canUndo => _past.isNotEmpty && !composing;
   bool get canRedo => _future.isNotEmpty && !composing;
   String get filename =>
@@ -76,6 +78,41 @@ class EditorController extends ChangeNotifier {
     _setValue(value);
   }
 
+  // The visual editor keeps its native IME connection. Only Markdown is copied
+  // here; composition is grouped into one shared undo entry.
+  void setVisualComposing(bool active) {
+    if (_visualComposing == active) return;
+    _visualComposing = active;
+    if (active) {
+      _compositionStart = text.value;
+    } else {
+      final start = _compositionStart;
+      _compositionStart = null;
+      if (start != null && start.text != text.text) {
+        _remember(start.copyWith(composing: TextRange.empty));
+        _future.clear();
+      }
+    }
+    notifyListeners();
+  }
+
+  void applyVisualEdit(String markdown) {
+    if (transitionLocked || markdown == text.text) return;
+    final max = markdown.length;
+    final value = TextEditingValue(
+      text: markdown,
+      selection: TextSelection(
+        baseOffset: text.selection.baseOffset.clamp(0, max),
+        extentOffset: text.selection.extentOffset.clamp(0, max),
+      ),
+    );
+    if (_visualComposing) {
+      _setValue(value);
+    } else {
+      applyEdit(value);
+    }
+  }
+
   void _setValue(TextEditingValue value) {
     _applying = true;
     text.value = value.copyWith(composing: TextRange.empty);
@@ -109,6 +146,7 @@ class EditorController extends ChangeNotifier {
     format = loaded?.format ?? const DocumentFormat();
     diskBaseline = loaded?.bytes;
     _compositionStart = null;
+    _visualComposing = false;
     _past.clear();
     _future.clear();
     documentId++;
@@ -154,10 +192,13 @@ class EditorController extends ChangeNotifier {
     return true;
   });
 
-  Future<bool> openDocument(EditorInteraction ui) => _operation(() async {
+  Future<bool> openDocument(
+    EditorInteraction ui, {
+    String? requestedPath,
+  }) => _operation(() async {
     transitionLocked = true;
     try {
-      final selected = await ui.chooseOpen();
+      final selected = requestedPath ?? await ui.chooseOpen();
       if (selected == null) return false;
       final nextPath = paths.markdownPath(selected);
       var loaded = await files.read(nextPath);

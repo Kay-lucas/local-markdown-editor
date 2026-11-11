@@ -457,3 +457,8 @@ flutter build windows --release
 - [Flutter Windows 개발 환경](https://docs.flutter.dev/platform-integration/windows/setup): Windows 도구 준비와 `flutter doctor` 확인.
 - [Flutter 테스트 안내](https://docs.flutter.dev/cookbook/testing): 단위·위젯·통합 테스트 참고.
 - [GitHub Flavored Markdown 사양](https://github.github.com/gfm/): 기본 문법과 표·체크리스트·취소선·자동 링크 확장 참고. 원시 HTML은 본 앱 정책에 따라 제한한다.
+
+
+## 후속 개선: v1.1.0 양방향 편집 (2026-11-11)
+
+사용자의 후속 요청에 따라 오른쪽을 서식 있는 문서 편집기로 확장한다. 왼쪽 Markdown과 오른쪽 문서에서 모두 수정할 수 있으며 저장·미저장 경고·실행 취소는 하나의 문서 상태를 공유한다. 표·코드·이미지·복잡한 구문은 원문 보존 블록으로 처리하고 왼쪽에서 수정한다. 기존 읽기 전용 미리보기는 전환 버튼으로 유지한다. 설치 파일·소스·화면 캡처가 포함된 설명을 공개 GitHub 저장소에 배포한다. 이 후속 범위는 이전의 오른쪽 읽기 전용 요구보다 우선한다. 상세 보존 규칙과 지원 범위는 [양방향 편집 문서](docs/bidirectional-editing.md)를 따른다.

@@ -13,7 +13,7 @@ import 'services/link_service.dart';
 import 'services/settings_service.dart';
 import 'services/window_service.dart';
 
-Future<void> main() async {
+Future<void> main(List<String> arguments) async {
   WidgetsFlutterBinding.ensureInitialized();
   final window = NativeEditorWindowService();
   await window.initialize();
@@ -46,6 +46,7 @@ Future<void> main() async {
       window: window,
       policy: ContentPolicy(paths),
       links: BrowserLinkService(),
+      initialPath: arguments.length == 1 ? arguments.first : null,
     ),
   );
   unawaited(window.show());

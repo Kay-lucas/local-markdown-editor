@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_quill/flutter_quill.dart';
 
 import 'controllers/editor_controller.dart';
 import 'services/content_policy.dart';
@@ -18,6 +19,7 @@ class MarkdownEditorApp extends StatelessWidget {
     required this.policy,
     required this.links,
     this.interaction,
+    this.initialPath,
   });
   final EditorController editor;
   final SettingsController settings;
@@ -25,6 +27,7 @@ class MarkdownEditorApp extends StatelessWidget {
   final ContentPolicy policy;
   final LinkService links;
   final EditorInteraction? interaction;
+  final String? initialPath;
 
   ThemeData _theme(Brightness brightness) {
     final colorScheme = ColorScheme.fromSeed(
@@ -60,7 +63,10 @@ class MarkdownEditorApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       locale: const Locale('ko'),
       supportedLocales: const [Locale('ko'), Locale('en')],
-      localizationsDelegates: GlobalMaterialLocalizations.delegates,
+      localizationsDelegates: const [
+        ...GlobalMaterialLocalizations.delegates,
+        FlutterQuillLocalizations.delegate,
+      ],
       theme: _theme(Brightness.light),
       darkTheme: _theme(Brightness.dark),
       themeMode: settings.value.theme,
@@ -71,6 +77,7 @@ class MarkdownEditorApp extends StatelessWidget {
         policy: policy,
         links: links,
         interaction: interaction,
+        initialPath: initialPath,
       ),
     ),
   );

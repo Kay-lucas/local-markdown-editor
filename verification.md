@@ -1,5 +1,7 @@
 # 구현 및 검증 결과
 
+> 이 문서는 v1.0 초기 구현의 검증 기록입니다. v1.1 양방향 편집의 최신 결과는 [verification/v1.1.0.md](verification/v1.1.0.md)를 참고하세요. `verification/installer_results.json`은 가장 최근 설치 테스트 결과입니다.
+
 검증일: 2026-10-28 (한국 시간)
 
 ## 1. 현재 상태

@@ -199,6 +199,8 @@ void main() {
     HttpOverrides.global = guard;
     addTearDown(() => HttpOverrides.global = old);
     await mount(tester);
+    await tester.tap(find.byKey(const ValueKey('toggle-visual-preview')));
+    await tester.pumpAndSettle();
     editor.text.text =
         '| 항목 | 상태 |\n| :--- | ---: |\n| 한글 | 정상 |\n\n- [x] 완료\n\n~~취소~~\n\nhttps://example.com\n\n![원격](https://example.com/a.png)\n\n<script>alert(1)</script>';
     await tester.pump(const Duration(milliseconds: 300));
